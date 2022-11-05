@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图书管理</title>
+    <link rel="stylesheet" href="./css/bootstrap.css" />
+</head>
+
+<body style="padding: 20px 20px;">
+    <!-- 添加图书的panel面板 -->
+
+    <div class="panel panel-primary">
+        <div class="panel-heading">
+            <h3 class="panel-title">添加新图书</h3>
+        </div>
+        <div class="panel-body form-inline">
+
+            <div class="input-group">
+                <div class="input-group-addon">书名</div>
+                <input type="text" class="form-control" id="iptBookname" placeholder="请输入书名">
+            </div>
+            <div class="input-group">
+                <div class="input-group-addon">作者</div>
+                <input type="text" class="form-control" id="iptAuthor" placeholder="请输入作者">
+            </div>
+            <div class="input-group">
+                <div class="input-group-addon">出版社</div>
+                <input type="text" class="form-control" id="iptPublisher" placeholder="请输入出版社">
+            </div>
+
+            <button class="btn btn-primary">添加</button>
+        </div>
+    </div>
+
+    <!-- 图书列表 -->
+
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>id</th>
+                <th>书名</th>
+                <th>作者</th>
+                <th>出版社</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="bookList">
+            <tr>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script src="./js/jquery.js"></script>
+    <script>
+        // 发起get请求获取图书列表
+        function getBookList() {
+            $.get('http://www.liulongbin.top:3006/api/getbooks', function(res) {
+                console.log(res);
+                // 判断获取列表是否成功
+                if (res.status !== 200) return alert('获取数据失败')
+
+                //根据数据渲染页面
+                let t = ''
+                $.each(res.data, function(index, item) {
+                    t += `<tr>
+                <th>${item.id}</th>
+                <th>${item.bookname}</th>
+                <th>${item.author}</th>
+                <th>${item.publisher}</th>
+                <th><a herf='javascript:' class='del'>删除</a></th>
+            </tr>`
+                })
+
+                $('#bookList').empty().html(t)
+
+            })
+        }
+        getBookList()
+
+        // 删除书籍 使用事件委托
+        $('#bookList').on('click', '.del', function() {
+            // console.log('d');
+            // 获取被点击元素的ID
+            let id = $(this).parent().parent().find('th').first().text()
+                // console.log(id);
+
+            // 根据ID发起Ajax请求删除元素
+            $.ajax({
+                type: 'GET',
+                url: 'http://www.liulongbin.top:3006/api/delbook',
+                data: {
+                    id: id
+                },
+                success: function(res) {
+                    console.log(res);
+                    // 判断删除是否成功
+                    if (res.status !== 200) return alert('获取失败')
+                        // 重新加载图书
+                    getBookList()
+                }
+            })
+        })
+
+        // 添加图书
+
+
+        // 2.为添加按钮绑定点击事件
+        $('.btn').click(function() {
+            let iptBookname = $('#iptBookname').val()
+            let iptAuthor = $('#iptAuthor').val()
+            let iptPublisher = $('#iptPublisher').val()
+
+            if (iptBookname === '' || iptAuthor === '' || iptPublisher === '') {
+                return alert('请输入内容')
+            }
+
+            // 内容不为空发起Ajax请求
+            $.ajax({
+                type: 'POST',
+                url: 'http://www.liulongbin.top:3006/api/addbook',
+                data: {
+                    bookname: iptBookname,
+                    author: iptAuthor,
+                    publisher: iptPublisher
+                },
+                success: function(res) {
+                    // console.log(res);
+                    // 判断是否添加成功
+                    if (res.status !== 201) {
+                        return alert('添加失败')
+                    }
+                    // 重新加载图书
+                    getBookList()
+                }
+            })
+
+        })
+    </script>
+</body>
+
+</html>
